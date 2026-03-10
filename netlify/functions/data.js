@@ -1,15 +1,10 @@
 const { parseCookies, verifySession, unauthorized } = require("./utils");
 
 exports.handler = async (event) => {
-  const { GOOGLE_APPS_SCRIPT_URL, SESSION_SECRET } = process.env;
+  const GOOGLE_APPS_SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbwjl4my3umNLqvnZgYMsJD5CpbzRBn6-CLKP0LUmgy-4ekR4vXShXtnwpCuejLNSyEnWw/exec";
 
-  if (!GOOGLE_APPS_SCRIPT_URL || !SESSION_SECRET) {
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, message: "Missing environment variables" })
-    };
-  }
+  const SESSION_SECRET = "super-secret-random-string-123";
 
   const cookies = parseCookies(event.headers.cookie || "");
   const session = verifySession(cookies.portal_session || "", SESSION_SECRET);
@@ -29,7 +24,11 @@ exports.handler = async (event) => {
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, message: "Failed to fetch sheet data" })
+      body: JSON.stringify({
+        ok: false,
+        message: "Failed to fetch sheet data",
+        error: error.message
+      })
     };
   }
 };
