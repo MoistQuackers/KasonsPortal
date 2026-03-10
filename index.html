@@ -46,24 +46,22 @@
     try {
       const res = await fetch("/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
       });
 
       const data = await res.json();
+      console.log("LOGIN RESPONSE:", data);
 
       if (!res.ok) {
-        errorEl.textContent = data.message || "Unable to sign in.";
-        console.log("LOGIN RESPONSE:", data);
+        errorEl.textContent = data.message || "Unable to login";
         return;
       }
 
       window.location.href = "/dashboard.html";
     } catch (err) {
-      errorEl.textContent = "Unable to sign in right now.";
-      console.error(err);
+      console.error("LOGIN FETCH ERROR:", err);
+      errorEl.textContent = "Unable to login";
     }
   });
 </script>
