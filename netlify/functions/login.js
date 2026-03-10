@@ -1,7 +1,7 @@
 const { signSession } = require("./utils");
 
-const PORTAL_USERNAME = "portal";
-const PORTAL_PASSWORD = "password123";
+const PORTAL_USERNAME = "Kason";
+const PORTAL_PASSWORD = "Memphis";
 const SESSION_SECRET = "super-secret-random-string-123";
 
 exports.handler = async (event) => {
