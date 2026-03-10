@@ -18,47 +18,58 @@ const els = {
 };
 
 async function init() {
-  await loadData();
-  populateRepFilter();
-  bindEvents();
-  render();
+  try {
+    await loadData();
+    populateRepFilter();
+    bindEvents();
+    render();
+  } catch (error) {
+    console.error("INIT ERROR:", error);
+    alert("Dashboard failed to load. Open browser console for details.");
+  }
 }
 
 async function loadData() {
   const res = await fetch("/api/data");
-
-  if (res.status === 401) {
-    window.location.href = "/";
-    return;
-  }
-
   const data = await res.json();
 
-  if (!res.ok || !data.ok) {
-    alert("Unable to load portal data.");
-    return;
+  console.log("RAW /api/data RESPONSE:", data);
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to load /api/data");
   }
 
-  allRows = Array.isArray(data.rows) ? data.rows.map(mapRow) : [];
+  const rows = Array.isArray(data.rows) ? data.rows : Array.isArray(data) ? data : [];
+  console.log("ROWS BEFORE MAPPING:", rows);
+
+  allRows = rows.map(mapRow);
+  console.log("ROWS AFTER MAPPING:", allRows);
 }
 
 function mapRow(row) {
   return {
-    status: String(row["Status"] || "").trim(),
-    firstName: String(row["First Name"] || "").trim(),
-    lastName: String(row["Last Name"] || "").trim(),
-    salesRep: String(row["Sales Rep"] || "").trim(),
-    model: String(row["Model"] || "").trim(),
-    docsSent: String(row["Docs Sent"] || "").trim(),
-    docsSigned: String(row["Docs Signed"] || "").trim(),
-    paymentReceived: String(row["Payment Received"] || "").trim(),
-    startDate: normalizeDate(row["Start Date"] || "")
+    status: getValue(row, ["Status", "status"]),
+    firstName: getValue(row, ["First Name", "firstName", "First"]),
+    lastName: getValue(row, ["Last Name", "lastName", "Last"]),
+    salesRep: getValue(row, ["Sales Rep", "salesRep", "Rep"]),
+    model: getValue(row, ["Model", "model"]),
+    docsSent: getValue(row, ["Docs Sent", "docsSent"]),
+    docsSigned: getValue(row, ["Docs Signed", "docsSigned"]),
+    paymentReceived: getValue(row, ["Payment Received", "paymentReceived"]),
+    startDate: normalizeDate(getValue(row, ["Start Date", "startDate", "Date"]))
   };
+}
+
+function getValue(obj, keys) {
+  for (const key of keys) {
+    if (obj && obj[key] != null) return String(obj[key]).trim();
+  }
+  return "";
 }
 
 function normalizeDate(value) {
   if (!value) return "";
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
 
   const d = new Date(value);
   if (isNaN(d)) return "";
@@ -70,7 +81,12 @@ function normalizeDate(value) {
 }
 
 function populateRepFilter() {
+  if (!els.repFilter) return;
+
+  els.repFilter.innerHTML = `<option value="">All Reps</option>`;
+
   const reps = [...new Set(allRows.map(r => r.salesRep).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
   reps.forEach(rep => {
     const option = document.createElement("option");
     option.value = rep;
@@ -80,7 +96,7 @@ function populateRepFilter() {
 }
 
 function bindEvents() {
-  ["change", "input"].forEach(evt => {
+  ["input", "change"].forEach(evt => {
     els.dateFrom?.addEventListener(evt, render);
     els.dateTo?.addEventListener(evt, render);
     els.repFilter?.addEventListener(evt, render);
@@ -88,29 +104,33 @@ function bindEvents() {
   });
 
   els.clearFiltersBtn?.addEventListener("click", () => {
-    els.dateFrom.value = "";
-    els.dateTo.value = "";
-    els.repFilter.value = "";
-    els.nameSearch.value = "";
+    if (els.dateFrom) els.dateFrom.value = "";
+    if (els.dateTo) els.dateTo.value = "";
+    if (els.repFilter) els.repFilter.value = "";
+    if (els.nameSearch) els.nameSearch.value = "";
     render();
   });
 
   els.logoutBtn?.addEventListener("click", async () => {
-    await fetch("/api/logout");
+    try {
+      await fetch("/api/logout");
+    } catch (e) {
+      console.warn("Logout endpoint failed:", e);
+    }
     window.location.href = "/";
   });
 }
 
 function getFilteredRows() {
-  const from = els.dateFrom.value;
-  const to = els.dateTo.value;
-  const rep = els.repFilter.value.toLowerCase().trim();
-  const search = els.nameSearch.value.toLowerCase().trim();
+  const from = els.dateFrom?.value || "";
+  const to = els.dateTo?.value || "";
+  const rep = (els.repFilter?.value || "").toLowerCase().trim();
+  const search = (els.nameSearch?.value || "").toLowerCase().trim();
 
   return allRows.filter(row => {
     const rowDate = row.startDate || "";
-    const matchesFrom = !from || (rowDate && rowDate >= from);
-    const matchesTo = !to || (rowDate && rowDate <= to);
+    const matchesFrom = !from || !rowDate || rowDate >= from;
+    const matchesTo = !to || !rowDate || rowDate <= to;
     const matchesRep = !rep || row.salesRep.toLowerCase() === rep;
     const matchesSearch =
       !search ||
@@ -123,18 +143,23 @@ function getFilteredRows() {
 
 function render() {
   const rows = getFilteredRows();
+  console.log("FILTERED ROWS:", rows);
+
   updateCards(rows);
   updateTable(rows);
-  els.resultsCount.textContent = `${rows.length} result${rows.length === 1 ? "" : "s"}`;
+
+  if (els.resultsCount) {
+    els.resultsCount.textContent = `${rows.length} result${rows.length === 1 ? "" : "s"}`;
+  }
 }
 
 function updateCards(rows) {
-  els.cardTotalSales.textContent = rows.length;
-  els.cardMiniBox.textContent = rows.filter(r => normalizeModel(r.model) === "minibox").length;
-  els.cardBungalow.textContent = rows.filter(r => normalizeModel(r.model) === "bungalow").length;
-  els.cardDuplex.textContent = rows.filter(r => normalizeModel(r.model) === "duplex").length;
-  els.cardWaitingSignature.textContent = rows.filter(r => normalizeStatus(r.status).includes("waiting signature")).length;
-  els.cardWaitingPayment.textContent = rows.filter(r => normalizeStatus(r.status).includes("waiting payment")).length;
+  if (els.cardTotalSales) els.cardTotalSales.textContent = rows.length;
+  if (els.cardMiniBox) els.cardMiniBox.textContent = rows.filter(r => normalizeModel(r.model) === "minibox").length;
+  if (els.cardBungalow) els.cardBungalow.textContent = rows.filter(r => normalizeModel(r.model) === "bungalow").length;
+  if (els.cardDuplex) els.cardDuplex.textContent = rows.filter(r => normalizeModel(r.model) === "duplex").length;
+  if (els.cardWaitingSignature) els.cardWaitingSignature.textContent = rows.filter(r => normalizeStatus(r.status).includes("waiting signature")).length;
+  if (els.cardWaitingPayment) els.cardWaitingPayment.textContent = rows.filter(r => normalizeStatus(r.status).includes("waiting payment")).length;
 }
 
 function normalizeModel(value) {
@@ -170,6 +195,8 @@ function escapeHtml(value = "") {
 }
 
 function updateTable(rows) {
+  if (!els.tableBody) return;
+
   els.tableBody.innerHTML = "";
 
   if (!rows.length) {
