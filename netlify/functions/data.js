@@ -1,11 +1,11 @@
 const { parseCookies, verifySession, unauthorized } = require("./utils");
 
+const GOOGLE_APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbwjl4my3umNLqvnZgYMsJD5CpbzRBn6-CLKP0LUmgy-4ekR4vXShXtnwpCuejLNSyEnWw/exec";
+
+const SESSION_SECRET = "super-secret-random-string-123";
+
 exports.handler = async (event) => {
-  const GOOGLE_APPS_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbwjl4my3umNLqvnZgYMsJD5CpbzRBn6-CLKP0LUmgy-4ekR4vXShXtnwpCuejLNSyEnWw/exec";
-
-  const SESSION_SECRET = "super-secret-random-string-123";
-
   const cookies = parseCookies(event.headers.cookie || "");
   const session = verifySession(cookies.portal_session || "", SESSION_SECRET);
 
