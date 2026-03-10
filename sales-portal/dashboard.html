@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partner Portal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dashboard-body">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Sales Portal</p>
+      <h1>Partner Dashboard</h1>
+      <p class="subtle">Live performance overview with filtering by date, rep, and customer name.</p>
+    </div>
+    <button id="logoutBtn" class="secondary-btn">Log Out</button>
+  </header>
+
+  <main class="page-wrap">
+    <section class="panel filters-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Filters</h2>
+          <p class="subtle">Use one filter or combine all of them.</p>
+        </div>
+      </div>
+
+      <div class="filters-grid">
+        <div class="field">
+          <label for="dateFrom">Date From</label>
+          <input type="date" id="dateFrom" />
+        </div>
+
+        <div class="field">
+          <label for="dateTo">Date To</label>
+          <input type="date" id="dateTo" />
+        </div>
+
+        <div class="field">
+          <label for="repFilter">Sales Rep</label>
+          <select id="repFilter">
+            <option value="">All Reps</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="nameSearch">Search First / Last Name</label>
+          <input type="text" id="nameSearch" placeholder="Ex: John or Smith" />
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button id="clearFiltersBtn" class="secondary-btn">Clear Filters</button>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span>Total Sales</span>
+        <strong id="cardTotalSales">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>MiniBox</span>
+        <strong id="cardMiniBox">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Bungalow</span>
+        <strong id="cardBungalow">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Duplex</span>
+        <strong id="cardDuplex">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Waiting Signature</span>
+        <strong id="cardWaitingSignature">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Waiting Payment</span>
+        <strong id="cardWaitingPayment">0</strong>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-header table-header">
+        <div>
+          <h2>Sales Records</h2>
+          <p id="resultsCount" class="subtle">0 results</p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Sales Rep</th>
+              <th>Model</th>
+              <th>Docs Sent</th>
+              <th>Docs Signed</th>
+              <th>Payment Received</th>
+              <th>Start Date</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
