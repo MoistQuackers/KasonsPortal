@@ -56,7 +56,9 @@ function mapRow(row) {
     docsSent: getValue(row, ["Docs Sent", "docsSent"]),
     docsSigned: getValue(row, ["Docs Signed", "docsSigned"]),
     paymentReceived: getValue(row, ["Payment Received", "paymentReceived"]),
-    startDate: normalizeDate(getValue(row, ["Start Date", "startDate", "Date"]))
+
+    // DATE FILTER NOW USES DOCS SENT
+    filterDate: normalizeDate(getValue(row, ["Docs Sent", "docsSent"]))
   };
 }
 
@@ -69,6 +71,7 @@ function getValue(obj, keys) {
 
 function normalizeDate(value) {
   if (!value) return "";
+
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
 
   const d = new Date(value);
@@ -128,7 +131,7 @@ function getFilteredRows() {
   const search = (els.nameSearch?.value || "").toLowerCase().trim();
 
   return allRows.filter(row => {
-    const rowDate = row.startDate || "";
+    const rowDate = row.filterDate || "";
     const matchesFrom = !from || !rowDate || rowDate >= from;
     const matchesTo = !to || !rowDate || rowDate <= to;
     const matchesRep = !rep || row.salesRep.toLowerCase() === rep;
@@ -217,7 +220,7 @@ function updateTable(rows) {
       <td>${escapeHtml(row.docsSent)}</td>
       <td>${escapeHtml(row.docsSigned)}</td>
       <td>${escapeHtml(row.paymentReceived)}</td>
-      <td>${escapeHtml(formatDisplayDate(row.startDate))}</td>
+      <td>${escapeHtml(formatDisplayDate(row.filterDate))}</td>
     `;
     els.tableBody.appendChild(tr);
   });
